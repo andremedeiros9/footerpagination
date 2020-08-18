@@ -19,21 +19,32 @@ func translateParams(r *http.Request) (params Params, err error) {
 
 	query := r.URL.Query()
 
+	key := "currentpage"
+	value := query.Get(key)
 	params.currentpage, err = strconv.Atoi(query.Get("currentpage"))
-	if err != nil {
-		return params, fmt.Errorf("Current Page value is not accepted")
+	if err != nil || params.currentpage < 1 {
+		return params, fmt.Errorf("%s %s value is not accepted", key, value, err)
 	}
+
+	key = "around"
+	value = query.Get(key)
 	params.around, err = strconv.Atoi(query.Get("around"))
-	if err != nil {
-		return params, fmt.Errorf("Around value is not accepted")
+	if err != nil || params.around < 1 {
+		return params, fmt.Errorf("%s %s value is not accepted", key, value, err)
 	}
+
+	key = "totalpages"
+	value = query.Get(key)
 	params.totalpages, err = strconv.Atoi(query.Get("totalpages"))
-	if err != nil {
-		return params, fmt.Errorf("Total Pages value is not accepted")
+	if err != nil || params.totalpages < 1 {
+		return params, fmt.Errorf("%s %s value is not accepted", key, value, err)
 	}
+
+	key = "boundaries"
+	value = query.Get(key)
 	params.boundaries, err = strconv.Atoi(query.Get("boundaries"))
-	if err != nil {
-		return params, fmt.Errorf("Boundaries value is not accepted")
+	if err != nil || params.boundaries < 1 {
+		return params, fmt.Errorf("%s %s value is not accepted", key, value, err)
 	}
 
 	return params, nil
