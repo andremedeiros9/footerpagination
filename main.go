@@ -4,13 +4,22 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/goji/httpauth"
 )
 
 func main() {
-	r := mux.NewRouter()
+	//r := mux.NewRouter()
 
-	r.HandleFunc("/", getPages).Queries("currentpage", "{currentpage}", "around", "{around}", "totalpages", "{totalpages}", "boundaries", "{boundaries}").Methods("GET")
+	//r.HandleFunc("/", getPages).Queries("currentpage", "{currentpage}", "around", "{around}", "totalpages", "{totalpages}", "boundaries", "{boundaries}").Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8000", r))
+	authHandler := httpauth.SimpleBasicAuth("Footer", "footer")
+
+	mux := http.NewServeMux()
+
+	finalHandler := http.HandlerFunc(getPages)
+	mux.Handle("/", authHandler(finalHandler))
+
+	//http.HandleFunc("/", authHandler(getPages))
+
+	log.Fatal(http.ListenAndServe(":8000", mux))
 }
