@@ -2,10 +2,43 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+type Params struct {
+	currentpage int
+	around      int
+	totalpages  int
+	boundaries  int
+}
+
+func translateParams(r *http.Request) (params Params, err error) {
+
+	query := r.URL.Query()
+
+	params.currentpage, err = strconv.Atoi(query.Get("currentpage"))
+	if err != nil {
+		return params, fmt.Errorf("Current Page value is not accepted")
+	}
+	params.around, err = strconv.Atoi(query.Get("around"))
+	if err != nil {
+		return params, fmt.Errorf("Around value is not accepted")
+	}
+	params.totalpages, err = strconv.Atoi(query.Get("totalpages"))
+	if err != nil {
+		return params, fmt.Errorf("Total Pages value is not accepted")
+	}
+	params.boundaries, err = strconv.Atoi(query.Get("boundaries"))
+	if err != nil {
+		return params, fmt.Errorf("Boundaries value is not accepted")
+	}
+
+	return params, nil
+
+}
 
 //function responsible to deal with the request and response of the service
 func getPages(w http.ResponseWriter, r *http.Request) {
@@ -13,41 +46,20 @@ func getPages(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		log.Printf("Not a GET method")
-		w.WriteStatus(http.BadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	query := r.URL.Query()
+	params, err := translateParams(r)
 
-	currentpage, err := strconv.Atoi(query.Get("currentpage"))
 	if err != nil {
-		w.WriteStatus(http.StatusBadRequest)
-		log.Printf("Current Page value not accepted")
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
 		return
 	}
-	around, err := strconv.Atoi(query.Get("around"))
-	if err != nil {
-		w.WriteStatus(http.StatusBadRequest)
-		log.Printf("Around value not accepted")
-		//log.Fatal(err)
-		return
-	}
-	totalpages, err := strconv.Atoi(query.Get("totalpages"))
-	if err != nil {
-		w.WriteStatus(http.StatusBadRequest)
-		log.Printf("Total Pages value not accepted")
-		//log.Fatal(err)
-		return
-	}
-	boundaries, err := strconv.Atoi(query.Get("boundaries"))
-	if err != nil {
-		w.WriteStatus(http.StatusBadRequest)
-		log.Printf("Boundaries value not accepted")
-		//log.Fatal(err)
-		return
-	}
-	w.WriteStatus(http.StatusOK)
+
+	w.WriteHeader(http.StatusOK)
 	log.Printf("All is well")
-	footerpagination := newFooter(currentpage, around, totalpages, boundaries)
+	footerpagination := newFooter(params.currentpage, params.around, params.totalpages, params.boundaries)
 	json.NewEncoder(w).Encode(footerpagination)
 }
